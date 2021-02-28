@@ -1,0 +1,38 @@
+[package]
+name = "erc1155_extension"
+version = "0.1.0"
+authors = ["[your_name] <[your_email]>"]
+edition = "2018"
+
+[dependencies]
+ink_primitives = { version = "3.0.0-rc2", default-features = false, git = "https://github.com/paritytech/ink.git", branch = "master" }
+ink_metadata = { version = "3.0.0-rc2", default-features = false, features = ["derive"], optional = true, git = "https://github.com/paritytech/ink.git", branch = "master" }
+ink_env = { version = "3.0.0-rc2", default-features = false, git = "https://github.com/paritytech/ink.git", branch = "master" }
+ink_storage = { version = "3.0.0-rc2", default-features = false, git = "https://github.com/paritytech/ink.git", branch = "master" }
+ink_lang = { version = "3.0.0-rc2", default-features = false, git = "https://github.com/paritytech/ink.git", branch = "master" }
+ink_prelude = { version = "3.0.0-rc2", default-features = false, git = "https://github.com/paritytech/ink.git", branch = "master" }
+
+scale = { package = "parity-scale-codec", version = "2.0", default-features = false, features = ["derive"] }
+scale-info = { version = "0.6", default-features = false, features = ["derive"], optional = true }
+
+[lib]
+name = "erc1155_extension"
+path = "lib.rs"
+crate-type = [
+	# Used for normal contract Wasm blobs.
+	"cdylib",
+]
+
+[features]
+default = ["std"]
+std = [
+    "ink_metadata",
+    "ink_metadata/std",
+    "ink_env/std",
+    "ink_storage/std",
+    "ink_primitives/std",
+    "ink_prelude/std",
+    "scale/std",
+    "scale-info/std",
+]
+ink-as-dependency = []

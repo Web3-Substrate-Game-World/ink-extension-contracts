@@ -11,54 +11,57 @@ use ink_prelude::{
 };
 
 type AccountId = <ink_env::DefaultEnvironment as Environment>::AccountId;
-type TokenId = u32;
-type TokenBalance = u128;
+type Balance = <ink_env::DefaultEnvironment as Environment>::Balance;
+type TokenId = u64;
+type TaoId = u64;
+// type TokenBalance = u128;
 
 /// Define the operations to interact with the substrate runtime
 #[ink::chain_extension]
 pub trait Erc1155 {
     type ErrorCode = ExtensionReadErr;
 
-    #[ink(extension = 1000, returns_result = false)]
+    #[ink(extension = 1001, returns_result = false)]
     fn fetch_random() -> [u8; 32];
 
-    #[ink(extension = 1001, returns_result = false)]
-    fn set_approval_for_all(owner: AccountId, spender: AccountId, approved: bool);
-
     #[ink(extension = 1002, returns_result = false)]
-    fn mint(to: AccountId, id: TokenId, amount: TokenBalance);
+    fn create_tao(who: AccountId, data: Vec<u8>) -> TokenId;
 
     #[ink(extension = 1003, returns_result = false)]
-    fn batch_mint(to: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>);
+    fn create_token(who: AccountId, tao_id: TaoId);
 
     #[ink(extension = 1004, returns_result = false)]
-    fn burn(from: AccountId, to: TokenId, amount: TokenBalance);
+    fn set_approval_for_all(owner: AccountId, operator: AccountId, approved: bool);
 
     #[ink(extension = 1005, returns_result = false)]
-    fn batch_burn(from: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>);
+    fn mint(to: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance);
 
     #[ink(extension = 1006, returns_result = false)]
-    fn transfer_from(from: AccountId, to: AccountId, id: TokenId, amount: TokenBalance);
+    fn batch_mint(to: AccountId, tao_id: TaoId, token_ids : Vec<TokenId>, amounts: Vec<Balance>);
 
     #[ink(extension = 1007, returns_result = false)]
-    fn batch_transfer_from(from: AccountId, to: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>);
+    fn burn(from: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance);
 
     #[ink(extension = 1008, returns_result = false)]
-    fn approved_or_owner(who: AccountId, account: AccountId) -> bool;
-
+    fn batch_burn(from: AccountId, tao_id: Vec<TokenId>, token_ids: Vec<TokenId>, amounts: Vec<Balance>);
 
     #[ink(extension = 1009, returns_result = false)]
-    fn is_nf(id: TokenId) -> bool;
+    fn transfer_from(from: AccountId, to: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance);
 
     #[ink(extension = 1010, returns_result = false)]
-    fn is_approved_for_all(owner: AccountId, operator: AccountId) -> bool;
+    fn batch_transfer_from(from: AccountId, to: AccountId, tao_id: TaoId, token_ids: Vec<TokenId>, amounts: Vec<Balance>);
 
     #[ink(extension = 1011, returns_result = false)]
-    fn balance_of(owner: AccountId, id: TokenId)  -> TokenBalance;
+    fn approved_or_owner(who: AccountId, account: AccountId) -> bool;
 
-    // error
-    // #[ink(extension = 1012, returns_result  = false)]
-    // fn balance_of_batch(owners: Vec<AccountId>, ids: Vec<TokenId>) -> Vec<TokenBalance>;
+    #[ink(extension = 1012, returns_result = false)]
+    fn is_approved_for_all(owner: AccountId, operator: AccountId) -> bool;
+
+    #[ink(extension = 1013, returns_result = false)]
+    fn balance_of(owner: AccountId, tao_id: TaoId, token_id: TokenId)  -> Balance;
+
+    #[ink(extension = 1014, returns_result  = false)]
+    fn balance_of_batch(owners: Vec<AccountId>, tao_id: TaoId, token_ids: Vec<TokenId>) -> Vec<Balance>;
 
 }
 
@@ -98,7 +101,7 @@ impl Environment for CustomEnvironment {
 #[ink::contract(env = crate::CustomEnvironment)]
 mod erc1155_extension {
     use super::ExtensionReadErr;
-    use crate::{vec, Vec, TokenId, TokenBalance};
+    use crate::{vec, Vec, TokenId, TaoId /*, TokenBalance*/};
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
@@ -148,70 +151,81 @@ mod erc1155_extension {
             self.value
         }
 
+       #[ink(message)]
+        pub fn create_tao(&mut self, who: AccountId, data: Vec<u8>) -> Result<TokenId, ExtensionReadErr> {
+           let ret = self.env().extension().create_tao(who, data)?;
+
+           Ok(ret)
+        }
+
         #[ink(message)]
-        pub fn set_approval_for_all(&mut self, owner: AccountId, spender: AccountId, approved: bool) -> Result<(), ExtensionReadErr> {
-            self.env().extension().set_approval_for_all(owner, spender, approved)?;
+        pub fn create_token(&mut self, who: AccountId, tao_id: TaoId) -> Result<(), ExtensionReadErr> {
+            self.env().extension().create_token(who, tao_id)?;
+
+            Ok(())
+        }
+
+
+
+        #[ink(message)]
+        pub fn set_approval_for_all(&mut self, owner: AccountId, operator: AccountId, approved: bool) -> Result<(), ExtensionReadErr> {
+            self.env().extension().set_approval_for_all(owner, operator, approved)?;
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn mint(&mut self, to: AccountId, id: TokenId, amount: TokenBalance) -> Result<(), ExtensionReadErr> {
-            self.env().extension().mint(to, id, amount);
+        pub fn mint(&mut self, to: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance) -> Result<(), ExtensionReadErr> {
+            self.env().extension().mint(to, tao_id, token_id, amount);
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn batch_mint(&mut self, to: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>) -> Result<(), ExtensionReadErr> {
-            self.env().extension().batch_mint(to, ids, amounts)?;
+        pub fn batch_mint(&mut self, to: AccountId, tao_id: TaoId, token_ids : Vec<TokenId>, amounts: Vec<Balance>) -> Result<(), ExtensionReadErr> {
+            self.env().extension().batch_mint(to, tao_id, token_ids, amounts)?;
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn burn(&mut self, from: AccountId, to: TokenId, amount: TokenBalance) -> Result<(), ExtensionReadErr> {
-            self.env().extension().burn(from, to, amount)?;
+        pub fn burn(&mut self, from: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance) -> Result<(), ExtensionReadErr> {
+            self.env().extension().burn(from, tao_id, token_id, amount)?;
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn batch_burn(&mut self, from: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>) -> Result<(), ExtensionReadErr> {
-            self.env().extension().batch_burn(from, ids, amounts)?;
+        pub fn batch_burn(&mut self, from: AccountId, tao_id: Vec<TokenId>, token_ids: Vec<TokenId>, amounts: Vec<Balance>) -> Result<(), ExtensionReadErr> {
+            self.env().extension().batch_burn(from, tao_id, token_ids, amounts)?;
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn transfer_from(&mut self, from: AccountId, to: AccountId, id: TokenId, amount: TokenBalance) -> Result<(), ExtensionReadErr> {
+        pub fn transfer_from(&mut self, from: AccountId, to: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance) -> Result<(), ExtensionReadErr> {
 
-            self.env().extension().transfer_from(from, to, id, amount)?;
-
-            Ok(())
-        }
-
-        #[ink(message)]
-        pub fn batch_transfer_from(&mut self, from: AccountId, to: AccountId, ids: Vec<TokenId>, amounts: Vec<TokenBalance>) -> Result<(), ExtensionReadErr> {
-
-            self.env().extension().batch_transfer_from(from, to, ids, amounts)?;
+            self.env().extension().transfer_from(from, to, tao_id, token_id, amount)?;
 
             Ok(())
         }
 
         #[ink(message)]
-        pub fn approved_or_owner(&mut self, who: AccountId, account: AccountId) -> Result<bool, ExtensionReadErr>{
+        pub fn batch_transfer_from(&mut self, from: AccountId, to: AccountId, tao_id: TaoId, token_ids: Vec<TokenId>, amounts: Vec<Balance>) -> Result<(), ExtensionReadErr> {
+
+            self.env().extension().batch_transfer_from(from, to, tao_id,token_ids,  amounts)?;
+
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub  fn approved_or_owner(&self, who: AccountId, account: AccountId) -> Result<bool, ExtensionReadErr>{
             let ret = self.env().extension().approved_or_owner(who, account)?;
 
             Ok(ret)
         }
 
-        #[ink(message)]
-        pub fn is_nf(&self, id: TokenId) -> Result<bool, ExtensionReadErr> {
-            let ret = self.env().extension().is_nf(id)?;
 
-            Ok(ret)
-        }
 
         #[ink(message)]
         pub fn is_approved_for_all(&self, owner: AccountId, operator: AccountId) -> Result<bool, ExtensionReadErr> {
@@ -222,12 +236,20 @@ mod erc1155_extension {
 
 
         #[ink(message)]
-        pub fn balance_of(&self, owner: AccountId, id: TokenId) -> Result<TokenBalance, ExtensionReadErr> {
-            // let caller = self.env().caller();
-            let balance = self.env().extension().balance_of(owner, id)?;
+        pub fn balance_of(&self, owner: AccountId, tao_id: TaoId, token_id: TokenId) -> Result<Balance, ExtensionReadErr> {
+            let balance = self.env().extension().balance_of(owner, tao_id, token_id)?;
 
             Ok(balance)
         }
+
+
+        #[ink(message)]
+        pub fn balance_of_batch(&self, owners: Vec<AccountId>, tao_id: TaoId, token_ids: Vec<TokenId>) -> Result<Vec<Balance>, ExtensionReadErr> {
+            let balance = self.env().extension().balance_of_batch(owners, tao_id, token_ids)?;
+
+            Ok(balance)
+        }
+
 
     }
 

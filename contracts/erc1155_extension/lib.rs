@@ -3,10 +3,10 @@
 use ink_env::Environment;
 use ink_lang as ink;
 use ink_prelude::{
-    boxed::Box,
-    collections::BTreeMap,
-    string::String,
-    vec,
+    // boxed::Box,
+    // collections::BTreeMap,
+    // string::String,
+    // vec,
     vec::Vec,
 };
 
@@ -101,7 +101,7 @@ impl Environment for CustomEnvironment {
 #[ink::contract(env = crate::CustomEnvironment)]
 mod erc1155_extension {
     use super::ExtensionReadErr;
-    use crate::{vec, Vec, TokenId, TaoId /*, TokenBalance*/};
+    use crate::{/*vec,*/ Vec, TokenId, TaoId /*, TokenBalance*/};
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
@@ -176,7 +176,7 @@ mod erc1155_extension {
 
         #[ink(message)]
         pub fn mint(&mut self, to: AccountId, tao_id: TaoId, token_id: TokenId, amount: Balance) -> Result<(), ExtensionReadErr> {
-            self.env().extension().mint(to, tao_id, token_id, amount);
+            self.env().extension().mint(to, tao_id, token_id, amount)?;
 
             Ok(())
         }
@@ -249,7 +249,6 @@ mod erc1155_extension {
 
             Ok(balance)
         }
-
 
     }
 
